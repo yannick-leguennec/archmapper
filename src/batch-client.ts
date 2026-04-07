@@ -288,4 +288,41 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+// --- custom_id encoding/decoding ---
+// Anthropic custom_id allows only [a-zA-Z0-9_-]{1,64}.
+// File paths contain / and . which are invalid.
+// We encode: / → -- and . → _d_ then truncate + hash if over 64 chars.
+
+export function encodeCustomId(filePath: string): string {
+  let encoded = filePath
+    .replace(/\./g, '_d_')
+    .replace(/\//g, '--')
+
+  if (encoded.length > 64) {
+    // Truncate and append a short hash for uniqueness
+    const hash = simpleHash(filePath)
+    encoded = encoded.slice(0, 54) + '_h_' + hash
+  }
+
+  return encoded
+}
+
+export function decodeCustomId(customId: string): string {
+  // Cannot perfectly reverse a truncated+hashed ID, but those are looked up
+  // via the mapping. This handles the non-truncated case.
+  return customId
+    .replace(/--/g, '/')
+    .replace(/_d_/g, '.')
+}
+
+function simpleHash(str: string): string {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Convert to 32-bit integer
+  }
+  return Math.abs(hash).toString(36).slice(0, 7)
+}
+
 export { MAX_REQUESTS_PER_BATCH }

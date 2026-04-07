@@ -14,7 +14,8 @@ project/
 test-project/
 
 # ─── Pipeline output artifacts ────────────────────────────────────────────────
-architecture/
+# architecture/ is committed — the output is ethical architectural documentation,
+# not reproduced source code. Keeping it in git provides backup and version history.
 
 # ─── Claude Code workspace ────────────────────────────────────────────────────
 .claude/

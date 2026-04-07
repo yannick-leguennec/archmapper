@@ -100,6 +100,21 @@ async function main(): Promise<void> {
     progress = loadProgress(outputDir)
   }
 
+  // --- Handle --retry-failed (must come BEFORE the "already done" check) ---
+  if (progress && retryFailedFlag && progress.failed.length > 0) {
+    const retryCount = progress.failed.length
+    const retryPaths = progress.failed.map((f) => f.path)
+    logger.info('--retry-failed: moving failed items back to pending', { count: retryCount })
+    progress = {
+      ...progress,
+      phase: 'module-synthesis',  // re-enter module synthesis phase
+      pending: [...progress.pending, ...retryPaths],
+      failed: [],
+      lastUpdatedAt: new Date().toISOString(),
+    }
+    saveProgress(outputDir, progress)
+  }
+
   if (progress && progress.phase === 'done' && !forceFlag) {
     logger.info('Pipeline already complete. Use --force to re-run.', {
       completedFiles: progress.completed.length,
@@ -111,20 +126,6 @@ async function main(): Promise<void> {
 
   if (!progress) {
     progress = createFreshProgress(config.projectName, config.scanRoot)
-    saveProgress(outputDir, progress)
-  }
-
-  // --- Handle --retry-failed ---
-  if (retryFailedFlag && progress.failed.length > 0) {
-    const retryCount = progress.failed.length
-    const retryPaths = progress.failed.map((f) => f.path)
-    logger.info('--retry-failed: moving failed items back to pending', { count: retryCount })
-    progress = {
-      ...progress,
-      pending: [...progress.pending, ...retryPaths],
-      failed: [],
-      lastUpdatedAt: new Date().toISOString(),
-    }
     saveProgress(outputDir, progress)
   }
 

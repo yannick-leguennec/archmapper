@@ -17,9 +17,9 @@ import * as path from 'node:path'
 
 import { FileAnalysisSchema } from '../types/schema'
 import { analyzeFile, buildBatchRequests } from '../llm-client'
-import { submitBatch, pollBatch, retrieveAndSaveResults, deleteCachedResults, MAX_REQUESTS_PER_BATCH } from '../batch-client'
+import { submitBatch, pollBatch, retrieveAndSaveResults, deleteCachedResults, encodeCustomId, MAX_REQUESTS_PER_BATCH } from '../batch-client'
 import { markCompleted, markFailed, saveProgress } from './progress'
-import { saveArtifact } from './static-analysis'
+import { saveArtifact, loadArtifact } from './static-analysis'
 
 import type Anthropic from '@anthropic-ai/sdk'
 import type { UsageInfo } from '../llm-client'
@@ -155,9 +155,13 @@ async function runFilePhaseInBatchMode(params: FilePhaseParams): Promise<FilePha
   if (progress.batchIds.length > 0) {
     logger.info('Resuming existing batch', { batchIds: progress.batchIds })
 
+    // Load the custom_id mapping from disk (saved before crash)
+    const savedMap = loadArtifact<Record<string, string>>(outputDir, 'custom-id-map.json') ?? {}
+    const customIdToPath = new Map(Object.entries(savedMap))
+
     for (const batchId of progress.batchIds) {
       const batchResult = await pollAndProcessBatch(
-        client, batchId, model, progress, architecture, outputDir, logger,
+        client, batchId, model, progress, architecture, outputDir, logger, customIdToPath,
       )
       progress = batchResult.progress
       architecture = batchResult.architecture
@@ -204,10 +208,19 @@ async function runFilePhaseInBatchMode(params: FilePhaseParams): Promise<FilePha
     return { progress, architecture, totalUsage }
   }
 
+  // Build a mapping from encoded custom_id → original file path
+  // Anthropic custom_id only allows [a-zA-Z0-9_-]{1,64}
+  const customIdToPath = new Map<string, string>()
+  const encodedItems = batchItems.map((item) => {
+    const encodedId = encodeCustomId(item.id)
+    customIdToPath.set(encodedId, item.id)
+    return { id: encodedId, userMessage: item.userMessage }
+  })
+
   // Split into chunks of MAX_REQUESTS_PER_BATCH if needed
   const chunks: Array<Array<{ id: string; userMessage: string }>> = []
-  for (let i = 0; i < batchItems.length; i += MAX_REQUESTS_PER_BATCH) {
-    chunks.push(batchItems.slice(i, i + MAX_REQUESTS_PER_BATCH))
+  for (let i = 0; i < encodedItems.length; i += MAX_REQUESTS_PER_BATCH) {
+    chunks.push(encodedItems.slice(i, i + MAX_REQUESTS_PER_BATCH))
   }
 
   // Submit each chunk as a batch
@@ -227,14 +240,16 @@ async function runFilePhaseInBatchMode(params: FilePhaseParams): Promise<FilePha
     batchIds.push(batchId)
   }
 
-  // Save batch IDs for crash recovery
+  // Save batch IDs and the custom_id mapping for crash recovery
   progress = { ...progress, batchIds }
   saveProgress(outputDir, progress)
+  // Save the mapping so crash recovery can decode custom_ids
+  saveArtifact(outputDir, 'custom-id-map.json', Object.fromEntries(customIdToPath))
 
   // Poll and process each batch
   for (const batchId of batchIds) {
     const batchResult = await pollAndProcessBatch(
-      client, batchId, model, progress, architecture, outputDir, logger,
+      client, batchId, model, progress, architecture, outputDir, logger, customIdToPath,
     )
     progress = batchResult.progress
     architecture = batchResult.architecture
@@ -264,6 +279,7 @@ async function pollAndProcessBatch(
   architecture: Architecture,
   outputDir: string,
   logger: Logger,
+  customIdToPath: Map<string, string>,
 ): Promise<{ progress: ProgressState; architecture: Architecture; totalUsage: AggregatedUsage }> {
   const totalUsage: AggregatedUsage = {
     inputTokens: 0, outputTokens: 0, cacheReadInputTokens: 0,
@@ -278,15 +294,18 @@ async function pollAndProcessBatch(
 
   // Process successful results
   for (const result of output.results) {
+    // Decode custom_id back to the original file path
+    const filePath = customIdToPath.get(result.customId) ?? result.customId
+
     const parsed = FileAnalysisSchema.safeParse(result.json)
     if (!parsed.success) {
       const zodError = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')
       logger.error('Batch result Zod validation failed', {
-        path: result.customId,
+        path: filePath,
         error_type: 'ZodParseError',
         zodError,
       })
-      progress = markFailed(progress, result.customId, `ZodParseError: ${zodError}`)
+      progress = markFailed(progress, filePath, `ZodParseError: ${zodError}`)
     } else {
       const fileAnalysis: FileAnalysis = {
         ...parsed.data,
@@ -295,7 +314,7 @@ async function pollAndProcessBatch(
       architecture = { ...architecture, files: [...architecture.files, fileAnalysis] }
       progress = markCompleted(
         progress,
-        result.customId,
+        filePath,
         result.usage.inputTokens + result.usage.outputTokens,
         0, // durationMs not available per-item in batch mode
       )
@@ -311,12 +330,13 @@ async function pollAndProcessBatch(
 
   // Process failures
   for (const failure of output.failures) {
+    const filePath = customIdToPath.get(failure.customId) ?? failure.customId
     logger.error('Batch request failed', {
-      path: failure.customId,
+      path: filePath,
       error_type: 'BatchError',
       message: failure.error,
     })
-    progress = markFailed(progress, failure.customId, `BatchError: ${failure.error}`)
+    progress = markFailed(progress, filePath, `BatchError: ${failure.error}`)
   }
 
   // Checkpoint

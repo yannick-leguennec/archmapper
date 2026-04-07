@@ -26,6 +26,7 @@ Operational rules for building ArchMapper. Each file in this directory covers on
 | Git | Commit message standard | [git/commits.md](git/commits.md) | Writing any commit message |
 | Documentation | Writing standard | [documentation/writing.md](documentation/writing.md) | Creating or updating any document in `docs/` or `standards/` |
 | Debugging | Universal debug process | [debugging/process.md](debugging/process.md) | Any bug, crash, failing test, or regression |
+| Analysis | Reading & analyzing architecture output | [analysis/reading-architecture.md](analysis/reading-architecture.md) | Answering questions about a reverse-engineered codebase, architectural review, or improvement recommendations |
 
 ---
 

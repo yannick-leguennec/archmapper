@@ -86,6 +86,7 @@ archmapper/
 │
 ├── standards/                    # operational rules for ArchMapper development
 │   ├── README.md
+│   ├── analysis/reading-architecture.md
 │   ├── architecture/pipeline.md
 │   ├── architecture/reverse-engineering.md
 │   ├── debugging/process.md
@@ -246,6 +247,7 @@ ArchMapper development follows TDD. The full workflow is in [standards/methodolo
 | Branch naming | [standards/git/branches.md](standards/git/branches.md) | Creating a new branch |
 | Documentation | [standards/documentation/writing.md](standards/documentation/writing.md) | Creating or updating any document in `docs/` or `standards/` |
 | Debugging | [standards/debugging/process.md](standards/debugging/process.md) | Any bug, crash, failing test, or regression |
+| Analysis | [standards/analysis/reading-architecture.md](standards/analysis/reading-architecture.md) | Answering questions about a reverse-engineered codebase |
 
 Full index with descriptions: [standards/README.md](standards/README.md)
 
@@ -274,7 +276,7 @@ A ticket is not done until every item below is satisfied:
 
 ## 12. Maintainer
 
-Owner: [to be filled — your name here]
+Owner: Yannick Le Guennec (The Wise Duck Dev)
 Repository: `archmapper`
 License: Proprietary — all rights reserved. See `LICENSE`.
 
