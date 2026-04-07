@@ -223,6 +223,7 @@ async function main(): Promise<void> {
       architecture,
       depGraph,
       logger,
+      useBatches: config.useBatches,
     })
 
     progress = {
