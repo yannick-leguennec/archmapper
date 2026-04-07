@@ -1,0 +1,33 @@
+# ─── Dependencies ─────────────────────────────────────────────────────────────
+node_modules/
+
+# ─── Build output ─────────────────────────────────────────────────────────────
+dist/
+
+# ─── Secrets ──────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ─── Analyzed codebases (user drops repos here — never committed) ─────────────
+project/
+test-project/
+
+# ─── Pipeline output artifacts ────────────────────────────────────────────────
+architecture/
+
+# ─── Claude Code workspace ────────────────────────────────────────────────────
+.claude/
+
+# ─── IDE / OS ─────────────────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Test / coverage ─────────────────────────────────────────────────────────
+coverage/
+*.lcov
