@@ -185,8 +185,12 @@ async function main(): Promise<void> {
     }
 
     // Extract file paths → set as pending
-    const filePaths = extractFilePaths(tree)
-    logger.info('Files to analyze', { count: filePaths.length })
+    // Separate directory excludes from file-suffix excludes
+    // Directory patterns: "node_modules", "dist", "vendor", "test", etc.
+    // File suffixes: ".test.ts", ".spec.ts", ".test.tsx", ".spec.tsx", etc.
+    const excludeSuffixes = config.excludePatterns.filter((p) => p.startsWith('.'))
+    const filePaths = extractFilePaths(tree, excludeSuffixes.length > 0 ? excludeSuffixes : undefined)
+    logger.info('Files to analyze', { count: filePaths.length, excludedSuffixes: excludeSuffixes })
 
     progress = {
       ...progress,

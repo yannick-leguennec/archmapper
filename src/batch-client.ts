@@ -294,9 +294,20 @@ function sleep(ms: number): Promise<void> {
 // We encode: / → -- and . → _d_ then truncate + hash if over 64 chars.
 
 export function encodeCustomId(filePath: string): string {
-  let encoded = filePath
-    .replace(/\./g, '_d_')
-    .replace(/\//g, '--')
+  // Replace every character that isn't [a-zA-Z0-9_-] with a safe encoding
+  let encoded = ''
+  for (const char of filePath) {
+    if (/[a-zA-Z0-9_-]/.test(char)) {
+      encoded += char
+    } else if (char === '/') {
+      encoded += '--'
+    } else if (char === '.') {
+      encoded += '_d_'
+    } else {
+      // Encode any other special char as _xNN where NN is the char code in hex
+      encoded += '_x' + char.charCodeAt(0).toString(16).padStart(2, '0')
+    }
+  }
 
   if (encoded.length > 64) {
     // Truncate and append a short hash for uniqueness
@@ -313,6 +324,7 @@ export function decodeCustomId(customId: string): string {
   return customId
     .replace(/--/g, '/')
     .replace(/_d_/g, '.')
+    .replace(/_x([0-9a-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
 }
 
 function simpleHash(str: string): string {

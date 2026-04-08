@@ -107,10 +107,18 @@ export function buildDependencyGraph(scanRoot: string, options?: BuildOptions): 
  * Extracts all analyzable file paths from the tree.
  * Includes every file except known binary formats.
  * Files without an extension (e.g. LICENSE, Makefile) are included.
+ * Optionally filters out files matching exclude suffixes (e.g. ".test.ts", ".spec.tsx").
  */
-export function extractFilePaths(tree: TreeNode): string[] {
+export function extractFilePaths(tree: TreeNode, excludeSuffixes?: string[]): string[] {
   const paths: string[] = []
   walkFiles(tree, paths)
+
+  if (excludeSuffixes && excludeSuffixes.length > 0) {
+    return paths
+      .filter((p) => !excludeSuffixes.some((suffix) => p.endsWith(suffix)))
+      .sort()
+  }
+
   return paths.sort()
 }
 
