@@ -16,6 +16,7 @@
 
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { config } from '../src/config'
 import { createRootLogger } from '../src/logger'
@@ -452,9 +453,19 @@ function printCompletionSummary(progress: ProgressState): void {
 }
 
 // --- Run ---
+//
+// Only invoke main() when this file is the CLI entry point.
+// When imported by a test or another module, importers can call the exports
+// directly without triggering a full pipeline run on module load.
 
-main().catch((error) => {
-  const message = error instanceof Error ? error.message : String(error)
-  process.stderr.write(`\nFatal error: ${message}\n`)
-  process.exit(1)
-})
+const invokedAsCli =
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+
+if (invokedAsCli) {
+  main().catch((error) => {
+    const message = error instanceof Error ? error.message : String(error)
+    process.stderr.write(`\nFatal error: ${message}\n`)
+    process.exit(1)
+  })
+}
