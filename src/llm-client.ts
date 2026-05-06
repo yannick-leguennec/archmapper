@@ -68,12 +68,28 @@ export interface BatchRequestItem {
 
 // --- Pricing per 1M tokens ---
 
+// Pricing per 1M tokens, in USD. Update when Anthropic releases new models or
+// adjusts rates. Cache rates follow Anthropic's documented ratios:
+//   cacheRead  = 0.10 * input rate (90% off)
+//   cacheWrite = 1.25 * input rate (5-minute ephemeral cache)
+// If a user points ArchMapper at a model not listed here, the cost summary
+// falls back to DEFAULT_PRICING (Sonnet rates) and the run still works.
 const PRICING: Record<string, { input: number; output: number; cacheRead: number; cacheWrite: number }> = {
-  'claude-opus-4-6':            { input: 5,  output: 25, cacheRead: 0.5,  cacheWrite: 6.25 },
-  'claude-opus-4-20250918':     { input: 5,  output: 25, cacheRead: 0.5,  cacheWrite: 6.25 },
-  'claude-sonnet-4-6':          { input: 3,  output: 15, cacheRead: 0.3,  cacheWrite: 3.75 },
-  'claude-sonnet-4-20250514':   { input: 3,  output: 15, cacheRead: 0.3,  cacheWrite: 3.75 },
-  'claude-haiku-4-5-20251001':  { input: 0.8, output: 4, cacheRead: 0.08, cacheWrite: 1    },
+  // Current models (latest as of 2026-05)
+  'claude-opus-4-7':             { input: 5,    output: 25,   cacheRead: 0.5,   cacheWrite: 6.25 },
+  'claude-sonnet-4-6':           { input: 3,    output: 15,   cacheRead: 0.3,   cacheWrite: 3.75 },
+  'claude-haiku-4-5':            { input: 1,    output: 5,    cacheRead: 0.1,   cacheWrite: 1.25 },
+  'claude-haiku-4-5-20251001':   { input: 1,    output: 5,    cacheRead: 0.1,   cacheWrite: 1.25 },
+
+  // Legacy models (still available; update or remove as Anthropic deprecates)
+  'claude-opus-4-6':             { input: 5,    output: 25,   cacheRead: 0.5,   cacheWrite: 6.25 },
+  'claude-opus-4-5-20251101':    { input: 5,    output: 25,   cacheRead: 0.5,   cacheWrite: 6.25 },
+  'claude-opus-4-1-20250805':    { input: 15,   output: 75,   cacheRead: 1.5,   cacheWrite: 18.75 },
+  'claude-opus-4-20250918':      { input: 5,    output: 25,   cacheRead: 0.5,   cacheWrite: 6.25 },
+  'claude-opus-4-20250514':      { input: 15,   output: 75,   cacheRead: 1.5,   cacheWrite: 18.75 },
+  'claude-sonnet-4-5-20250929':  { input: 3,    output: 15,   cacheRead: 0.3,   cacheWrite: 3.75 },
+  'claude-sonnet-4-20250514':    { input: 3,    output: 15,   cacheRead: 0.3,   cacheWrite: 3.75 },
+  'claude-3-haiku-20240307':     { input: 0.25, output: 1.25, cacheRead: 0.025, cacheWrite: 0.3125 },
 }
 
 const DEFAULT_PRICING = { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 }
