@@ -71,6 +71,14 @@ architecture/<PROJECT_NAME>/
     └── ...
 ```
 
+> **`dependency-cruiser` is optional.** It is not declared in `package.json`. If you want richer file-phase prompts (with import/require dependency edges available as context), install it locally:
+>
+> ```bash
+> npm install -D dependency-cruiser
+> ```
+>
+> Without it, the pipeline logs a one-line warning and skips writing `dep-graph.json`. Everything else works the same way.
+
 ## Using the output
 
 The `architecture.json` file is designed to be **directly consumed by an LLM** as context for downstream analysis. Two common patterns:
