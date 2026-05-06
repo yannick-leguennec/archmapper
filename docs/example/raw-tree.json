@@ -1,0 +1,246 @@
+{
+  "name": "archmapper-self",
+  "relativePath": ".",
+  "type": "directory",
+  "sizeInBytes": 184183,
+  "children": [
+    {
+      "name": "package.json",
+      "relativePath": "package.json",
+      "type": "file",
+      "extension": "json",
+      "sizeInBytes": 760
+    },
+    {
+      "name": "scripts",
+      "relativePath": "scripts",
+      "type": "directory",
+      "sizeInBytes": 14662,
+      "children": [
+        {
+          "name": "orchestrator.ts",
+          "relativePath": "scripts/orchestrator.ts",
+          "type": "file",
+          "extension": "ts",
+          "sizeInBytes": 14662
+        }
+      ]
+    },
+    {
+      "name": "src",
+      "relativePath": "src",
+      "type": "directory",
+      "sizeInBytes": 62149,
+      "children": [
+        {
+          "name": "batch-client.ts",
+          "relativePath": "src/batch-client.ts",
+          "type": "file",
+          "extension": "ts",
+          "sizeInBytes": 10013
+        },
+        {
+          "name": "config.loader.ts",
+          "relativePath": "src/config.loader.ts",
+          "type": "file",
+          "extension": "ts",
+          "sizeInBytes": 1758
+        },
+        {
+          "name": "config.ts",
+          "relativePath": "src/config.ts",
+          "type": "file",
+          "extension": "ts",
+          "sizeInBytes": 405
+        },
+        {
+          "name": "llm-client.ts",
+          "relativePath": "src/llm-client.ts",
+          "type": "file",
+          "extension": "ts",
+          "sizeInBytes": 9564
+        },
+        {
+          "name": "logger.ts",
+          "relativePath": "src/logger.ts",
+          "type": "file",
+          "extension": "ts",
+          "sizeInBytes": 2444
+        },
+        {
+          "name": "pipeline",
+          "relativePath": "src/pipeline",
+          "type": "directory",
+          "sizeInBytes": 36727,
+          "children": [
+            {
+              "name": "file-phase.ts",
+              "relativePath": "src/pipeline/file-phase.ts",
+              "type": "file",
+              "extension": "ts",
+              "sizeInBytes": 16107
+            },
+            {
+              "name": "folder-waves.ts",
+              "relativePath": "src/pipeline/folder-waves.ts",
+              "type": "file",
+              "extension": "ts",
+              "sizeInBytes": 10660
+            },
+            {
+              "name": "progress.ts",
+              "relativePath": "src/pipeline/progress.ts",
+              "type": "file",
+              "extension": "ts",
+              "sizeInBytes": 4635
+            },
+            {
+              "name": "static-analysis.ts",
+              "relativePath": "src/pipeline/static-analysis.ts",
+              "type": "file",
+              "extension": "ts",
+              "sizeInBytes": 5325
+            }
+          ]
+        },
+        {
+          "name": "types",
+          "relativePath": "src/types",
+          "type": "directory",
+          "sizeInBytes": 1238,
+          "children": [
+            {
+              "name": "schema.ts",
+              "relativePath": "src/types/schema.ts",
+              "type": "file",
+              "extension": "ts",
+              "sizeInBytes": 1238
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tests",
+      "relativePath": "tests",
+      "type": "directory",
+      "sizeInBytes": 105577,
+      "children": [
+        {
+          "name": "integration",
+          "relativePath": "tests/integration",
+          "type": "directory",
+          "sizeInBytes": 0
+        },
+        {
+          "name": "unit",
+          "relativePath": "tests/unit",
+          "type": "directory",
+          "sizeInBytes": 105577,
+          "children": [
+            {
+              "name": "batch-client.test.ts",
+              "relativePath": "tests/unit/batch-client.test.ts",
+              "type": "file",
+              "extension": "ts",
+              "sizeInBytes": 12097
+            },
+            {
+              "name": "config.test.ts",
+              "relativePath": "tests/unit/config.test.ts",
+              "type": "file",
+              "extension": "ts",
+              "sizeInBytes": 5935
+            },
+            {
+              "name": "llm-client.test.ts",
+              "relativePath": "tests/unit/llm-client.test.ts",
+              "type": "file",
+              "extension": "ts",
+              "sizeInBytes": 15335
+            },
+            {
+              "name": "logger.test.ts",
+              "relativePath": "tests/unit/logger.test.ts",
+              "type": "file",
+              "extension": "ts",
+              "sizeInBytes": 2868
+            },
+            {
+              "name": "orchestrator.test.ts",
+              "relativePath": "tests/unit/orchestrator.test.ts",
+              "type": "file",
+              "extension": "ts",
+              "sizeInBytes": 9322
+            },
+            {
+              "name": "pipeline",
+              "relativePath": "tests/unit/pipeline",
+              "type": "directory",
+              "sizeInBytes": 55510,
+              "children": [
+                {
+                  "name": "file-phase.test.ts",
+                  "relativePath": "tests/unit/pipeline/file-phase.test.ts",
+                  "type": "file",
+                  "extension": "ts",
+                  "sizeInBytes": 14951
+                },
+                {
+                  "name": "folder-waves.test.ts",
+                  "relativePath": "tests/unit/pipeline/folder-waves.test.ts",
+                  "type": "file",
+                  "extension": "ts",
+                  "sizeInBytes": 20344
+                },
+                {
+                  "name": "progress.test.ts",
+                  "relativePath": "tests/unit/pipeline/progress.test.ts",
+                  "type": "file",
+                  "extension": "ts",
+                  "sizeInBytes": 11904
+                },
+                {
+                  "name": "static-analysis.test.ts",
+                  "relativePath": "tests/unit/pipeline/static-analysis.test.ts",
+                  "type": "file",
+                  "extension": "ts",
+                  "sizeInBytes": 8311
+                }
+              ]
+            },
+            {
+              "name": "types",
+              "relativePath": "tests/unit/types",
+              "type": "directory",
+              "sizeInBytes": 4510,
+              "children": [
+                {
+                  "name": "schema.test.ts",
+                  "relativePath": "tests/unit/types/schema.test.ts",
+                  "type": "file",
+                  "extension": "ts",
+                  "sizeInBytes": 4510
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "type": "file",
+      "extension": "json",
+      "sizeInBytes": 719
+    },
+    {
+      "name": "vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "type": "file",
+      "extension": "ts",
+      "sizeInBytes": 316
+    }
+  ]
+}

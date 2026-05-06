@@ -1,0 +1,689 @@
+{
+  "schemaVersion": "1.0",
+  "projectName": "archmapper_self",
+  "fileModel": "claude-sonnet-4-6",
+  "synthesisModel": "claude-opus-4-6",
+  "generatedAt": "2026-05-06T19:50:00.234Z",
+  "files": [
+    {
+      "path": "src/types/schema.ts",
+      "purpose": "Defines the canonical data shapes for the architectural analysis domain using Zod schemas. It declares three hierarchical schemas — FileAnalysis, ModuleAnalysis, and Architecture — and derives their corresponding TypeScript types via Zod inference. This file serves as the single source of truth for both runtime validation and static typing across the codebase.",
+      "exports": [
+        "FileAnalysisSchema",
+        "ModuleAnalysisSchema",
+        "ArchitectureSchema",
+        "FileAnalysis",
+        "ModuleAnalysis",
+        "Architecture"
+      ],
+      "imports": [
+        "zod"
+      ],
+      "keyAbstractions": [
+        "FileAnalysisSchema",
+        "ModuleAnalysisSchema",
+        "ArchitectureSchema",
+        "FileAnalysis",
+        "ModuleAnalysis",
+        "Architecture"
+      ],
+      "patterns": [
+        "validator"
+      ],
+      "notes": "TypeScript types are derived entirely from Zod schemas via `z.infer`, ensuring runtime validation and static types never diverge. The `ArchitectureSchema` composes `FileAnalysisSchema` and `ModuleAnalysisSchema` as nested array elements, establishing a clear ownership hierarchy. The `tokensUsed` field on both leaf schemas hints at LLM token-budget tracking concerns bleeding into the data model.",
+      "tokensUsed": 2094
+    },
+    {
+      "path": "tsconfig.json",
+      "purpose": "Root TypeScript compiler configuration for the project. It enables a maximally strict type-checking profile (strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes, noImplicitReturns, noFallthroughCasesInSwitch) and targets ES2022 with ESNext modules using bundler resolution. It compiles source, scripts, and test directories into the dist output folder with full declaration, declaration map, and source map emission.",
+      "exports": [],
+      "imports": [],
+      "keyAbstractions": [
+        "compilerOptions",
+        "strict mode profile",
+        "ES2022 target",
+        "bundler moduleResolution",
+        "isolatedModules"
+      ],
+      "patterns": [
+        "config-module"
+      ],
+      "notes": "The use of moduleResolution: \"bundler\" (introduced in TypeScript 5.0) indicates the project relies on a bundler (e.g., Vite, esbuild, or similar) rather than Node.js resolution at runtime. isolatedModules: true enforces per-file transpilability, consistent with bundler-based toolchains. Notably, the rootDir is set to \".\" (project root) rather than \"src\", meaning scripts and tests are included in the same compilation unit, which can widen the output directory structure under dist. The \"project\" and \"architecture\" directories are explicitly excluded, hinting at sibling directories used for non-TypeScript artifacts or documentation.",
+      "tokensUsed": 1970
+    },
+    {
+      "path": "vitest.config.ts",
+      "purpose": "Vitest test runner configuration file for the project. It defines the test environment (Node.js), test file discovery glob pattern, code coverage settings using the V8 provider scoped to the src directory (excluding type declaration files), and a 10-second test timeout. No global test APIs are injected.",
+      "exports": [
+        "default"
+      ],
+      "imports": [
+        "vitest/config"
+      ],
+      "keyAbstractions": [
+        "defineConfig",
+        "test configuration",
+        "coverage configuration"
+      ],
+      "patterns": [
+        "config-module"
+      ],
+      "notes": "The exclusion of `src/types/**/*.ts` from coverage implies a dedicated types-only directory whose contents are intentionally kept out of coverage metrics — a common but worth-noting architectural convention signalling a clean separation between runtime code and pure type definitions.",
+      "tokensUsed": 1658
+    },
+    {
+      "path": "src/logger.ts",
+      "purpose": "Implements a structured JSON logger with configurable minimum log levels and hierarchical child-logger support. Log entries are emitted to stdout (DEBUG/INFO/WARNING) or stderr (ERROR/CRITICAL) as newline-delimited JSON. The root logger is created via a factory that resolves the minimum level from environment context, defaulting to DEBUG in non-production and INFO in production.",
+      "exports": [
+        "createRootLogger",
+        "Logger",
+        "LogLevel",
+        "LogEntry"
+      ],
+      "imports": [],
+      "keyAbstractions": [
+        "Logger",
+        "LogEntry",
+        "LogLevel",
+        "LEVEL_ORDER",
+        "createLogger"
+      ],
+      "patterns": [
+        "factory"
+      ],
+      "notes": "The Logger interface supports recursive child-logger creation via the child() method, which merges inherited context fields with new ones through closure-captured extraContext — enabling structured logging scopes without a formal class hierarchy. No external logging library is used; the entire implementation is self-contained with direct process.stdout/stderr writes. The LogEntry index signature ([key: string]: unknown) allows arbitrary extra fields, which may conflict with the named required fields at the type level in strict TypeScript configurations.",
+      "tokensUsed": 2415
+    },
+    {
+      "path": "src/config.ts",
+      "purpose": "Acts as the eager singleton entry point for application configuration. It triggers dotenv to load environment variables from a .env file as a side effect on import, then immediately invokes loadConfig() to produce and export the resolved config object. All production code is intended to consume configuration from this file, while pure config logic is intentionally separated into config.loader.ts for testability.",
+      "exports": [
+        "validateProjectName",
+        "loadConfig",
+        "config"
+      ],
+      "imports": [
+        "dotenv/config",
+        "./config.loader"
+      ],
+      "keyAbstractions": [
+        "config singleton",
+        "loadConfig",
+        "dotenv side-effect initialization",
+        "environment variable loading"
+      ],
+      "patterns": [
+        "singleton",
+        "config-module",
+        "barrel-export"
+      ],
+      "notes": "The file deliberately separates concerns: side-effectful dotenv initialization and singleton instantiation live here, while pure config-building logic lives in config.loader.ts. This split is an explicit architectural decision to keep config.loader.ts unit-testable without dotenv side effects. The re-export of validateProjectName and loadConfig from config.loader.ts via this file means consumers can import everything config-related from a single surface, but it also exposes the factory function (loadConfig) alongside the already-instantiated singleton (config), which could lead to unintended duplicate instantiation by callers who invoke loadConfig() directly from this module.",
+      "tokensUsed": 1804
+    },
+    {
+      "path": "src/llm-client.ts",
+      "purpose": "Acts as the single gateway to the Anthropic API for the entire project. It creates the SDK client, sends file analysis and module synthesis requests with structured tool-use output, builds batch request items for a separate batch-client, and computes token usage and USD cost from every API response. No other module is intended to instantiate Anthropic or call the API directly.",
+      "exports": [
+        "AnalysisKind",
+        "UsageInfo",
+        "LlmResult",
+        "AnalyzeFileParams",
+        "SynthesizeModuleParams",
+        "BatchRequestItem",
+        "createLlmClient",
+        "getJsonSchema",
+        "analyzeFile",
+        "synthesizeModule",
+        "buildBatchRequests",
+        "trackUsage"
+      ],
+      "imports": [
+        "@anthropic-ai/sdk",
+        "zod-to-json-schema",
+        "./types/schema",
+        "zod"
+      ],
+      "keyAbstractions": [
+        "AnalysisKind",
+        "LlmResult",
+        "UsageInfo",
+        "BatchRequestItem",
+        "PRICING"
+      ],
+      "patterns": [
+        "facade",
+        "singleton"
+      ],
+      "notes": "The module-level `schemaCache` map (keyed by `AnalysisKind`) provides lazy, memoized JSON Schema conversion — a lightweight singleton-like cache without a class. The PRICING table encodes Anthropic's documented cache ratios (cacheRead = 0.10× input, cacheWrite = 1.25× input) directly as constants, meaning rate changes require a manual code edit. The file intentionally embeds its own prompt-message builders (`buildFileUserMessage`, `buildModuleUserMessage`) despite the header claiming it does not build prompts — these are minimal message wrappers rather than full system-prompt builders, but the boundary could drift. The `$schema` stripping via destructuring followed by `void $schema` is an unusual pattern to silence the unused-variable linter warning.",
+      "tokensUsed": 5026
+    },
+    {
+      "path": "scripts/orchestrator.ts",
+      "purpose": "The CLI entry point for the ArchMapper reverse-engineering tool. It orchestrates a three-phase pipeline (static analysis → file analysis → module synthesis) by coordinating LLM clients, progress checkpointing, artifact caching, and prompt loading. It also handles CLI flags (--force, --retry-failed), generates Markdown spec cards per module, and prints a cost/token-usage summary on completion.",
+      "exports": [
+        "generateSpecCards",
+        "printCostSummary"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "../src/config",
+        "../src/logger",
+        "../src/llm-client",
+        "../src/pipeline/progress",
+        "../src/pipeline/static-analysis",
+        "../src/pipeline/file-phase",
+        "../src/pipeline/folder-waves"
+      ],
+      "keyAbstractions": [
+        "ProgressState",
+        "Architecture",
+        "AggregatedUsage",
+        "pipeline phases (static-analysis → file-analysis → module-synthesis → done)",
+        "spec card generation"
+      ],
+      "patterns": [
+        "pipeline"
+      ],
+      "notes": "The `main` function is the true entry point but is not exported; only two helper functions (`generateSpecCards`, `printCostSummary`) are exported, likely for testability rather than reuse. The `--retry-failed` flag forcibly re-enters the `module-synthesis` phase regardless of where the failure actually occurred (file-analysis failures would be skipped), which is a subtle behavioral limitation. The architecture object is both loaded from disk and mutated in-place across phases, creating implicit shared mutable state within a single run.",
+      "tokensUsed": 6152
+    },
+    {
+      "path": "src/pipeline/file-phase.ts",
+      "purpose": "Coordinates the per-file analysis phase of the architecture pipeline. For each pending source file it reads from disk, sends content to the LLM (synchronously or via Anthropic batch API), validates the response with Zod, merges the result into the Architecture object, and checkpoints progress. It supports both a sequential sync mode and a chunked batch mode with crash-recovery via persisted batch IDs and custom-ID mappings.",
+      "exports": [
+        "FilePhaseParams",
+        "FilePhaseResult",
+        "AggregatedUsage",
+        "runFilePhase",
+        "ProcessOneFileParams",
+        "processOneFile",
+        "buildFilePromptContext"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "../types/schema",
+        "../llm-client",
+        "../batch-client",
+        "./progress",
+        "./static-analysis",
+        "@anthropic-ai/sdk",
+        "../llm-client",
+        "../types/schema",
+        "./progress",
+        "./static-analysis",
+        "../logger"
+      ],
+      "keyAbstractions": [
+        "FilePhaseParams",
+        "FilePhaseResult",
+        "AggregatedUsage",
+        "ProcessOneFileParams",
+        "DependencyGraph"
+      ],
+      "patterns": [
+        "pipeline",
+        "strategy"
+      ],
+      "notes": "The batch-mode crash recovery relies on persisting batchIds inside ProgressState and a separate custom-id-map.json artifact to disk before polling — this is a deliberate durability pattern but creates implicit coupling between the progress schema and the batch-client artifact convention. The custom_id encoding indirection (encodeCustomId + in-memory/disk Map) is required to satisfy Anthropic API constraints ([a-zA-Z0-9_-]{1,64}), adding a non-obvious decode step. Immutable-style state threading (reassigning progress and architecture rather than mutating) is used consistently throughout both sync and batch paths, which is notable in a TypeScript codebase.",
+      "tokensUsed": 6705
+    },
+    {
+      "path": "package.json",
+      "purpose": "Project manifest for \"archmapper\", a Node.js CLI tool that performs fully automated, resumable, bottom-up reverse-engineering of codebases. It defines the project's identity, runtime requirements (Node >=20), module system (ESM), dependency set, and npm scripts for building, testing, type-checking, and executing the analysis pipeline.",
+      "exports": [],
+      "imports": [],
+      "keyAbstractions": [
+        "archmapper project identity",
+        "ESM module configuration",
+        "orchestrator entry point (scripts/orchestrator.ts)",
+        "analysis pipeline CLI command",
+        "dependency manifest"
+      ],
+      "patterns": [
+        "pipeline",
+        "config-module"
+      ],
+      "notes": "The `analyze` script invokes `scripts/orchestrator.ts` directly via `node --import tsx`, bypassing a compiled build step — indicating the primary runtime path is TypeScript-first using tsx as a loader rather than transpiling first. The `lint` script is aliased to `tsc --noEmit`, which is identical to `typecheck`, suggesting the lint step is intentionally type-checking only with no linter (e.g., ESLint) configured. The Anthropic SDK dependency signals LLM API calls are central to the pipeline, likely used for AI-assisted code analysis. `zod` and `zod-to-json-schema` together hint at structured output/tool-use patterns with the Anthropic API (JSON schema generation for function calling).",
+      "tokensUsed": 2037
+    },
+    {
+      "path": "src/pipeline/folder-waves.ts",
+      "purpose": "Implements the bottom-up folder-wave synthesis phase of the architecture analysis pipeline. It computes a topological wave ordering of directories (leaves first, parents last), then iterates through each wave to synthesize folder-level module descriptions by sending aggregated child summaries to an LLM (Opus). Results are validated with Zod, merged into the architecture state, and checkpointed to disk after each folder.",
+      "exports": [
+        "Wave",
+        "ModuleSynthesisParams",
+        "ModuleSynthesisResult",
+        "ProcessOneModuleParams",
+        "computeWaves",
+        "gatherChildContext",
+        "runModuleSynthesis",
+        "processOneModule"
+      ],
+      "imports": [
+        "../types/schema",
+        "../llm-client",
+        "./progress",
+        "./static-analysis",
+        "@anthropic-ai/sdk",
+        "../llm-client",
+        "../types/schema",
+        "./progress",
+        "./static-analysis",
+        "../logger",
+        "./file-phase"
+      ],
+      "keyAbstractions": [
+        "Wave (topological ordering of directory layers)",
+        "ModuleSynthesisParams / ProcessOneModuleParams (parameter bundles for LLM synthesis)",
+        "computeWaves (bottom-up BFS/iterative wave assignment)",
+        "gatherChildContext (child file and sub-module summary aggregation)",
+        "Architecture (mutable accumulator threaded through all processing steps)"
+      ],
+      "patterns": [
+        "pipeline",
+        "builder"
+      ],
+      "notes": "Architecture and ProgressState are passed immutably (spread copies) and returned as new values rather than mutated in place, creating a functional-style threading pattern through the pipeline. The wave computation uses an iterative fixed-point loop (Bellman-Ford-style) rather than a DFS-based topological sort, which is correct but O(n²) in the worst case. Resume support is implemented by checking progress.completed before processing each folder, making the function idempotent across restarts. The private helper collectFolders is not exported despite being logically paired with the exported computeWaves.",
+      "tokensUsed": 5087
+    },
+    {
+      "path": "src/config.loader.ts",
+      "purpose": "Provides pure, side-effect-free configuration loading logic for the application. Exports a `loadConfig` function that accepts an injectable environment map (defaulting to `process.env`) and a `validateProjectName` validator. Designed to be imported directly by tests and by the eager singleton in `config.ts`.",
+      "exports": [
+        "validateProjectName",
+        "loadConfig"
+      ],
+      "imports": [],
+      "keyAbstractions": [
+        "loadConfig",
+        "validateProjectName",
+        "requireEnv (inner helper)",
+        "optionalEnv (inner helper)",
+        "config shape (returned `as const` object)"
+      ],
+      "patterns": [
+        "validator",
+        "dependency-injection"
+      ],
+      "notes": "The `env` parameter defaulting to `process.env` is a lightweight dependency-injection seam that makes the module fully testable without mocking globals or patching dotenv. The returned object is typed `as const`, making all values readonly and their literal types preserved — this is a deliberate precision choice rather than a typed interface, which means the config shape is structurally inferred rather than explicitly declared. The file intentionally has no dotenv import, deferring that side effect to `config.ts`, which is called out in the leading JSDoc comment. `useBatches` is the only boolean field, silently coercing the string `'true'` — any other value (including `'True'` or `'1'`) resolves to `false` without error, which may be a subtle gotcha.",
+      "tokensUsed": 2304
+    },
+    {
+      "path": "src/batch-client.ts",
+      "purpose": "Manages the full lifecycle of Anthropic Message Batch API interactions: submitting arrays of requests, polling with exponential backoff until completion, downloading and caching raw results to disk for crash safety, and parsing/categorizing individual responses by custom_id. Also provides encoding/decoding utilities to safely map file-path-based identifiers to Anthropic's restricted custom_id character set.",
+      "exports": [
+        "submitBatch",
+        "pollBatch",
+        "retrieveAndSaveResults",
+        "deleteCachedResults",
+        "encodeCustomId",
+        "decodeCustomId",
+        "MAX_REQUESTS_PER_BATCH",
+        "BatchSubmitParams",
+        "BatchResult",
+        "BatchFailure",
+        "BatchOutput",
+        "PollOptions"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "@anthropic-ai/sdk",
+        "@anthropic-ai/sdk/resources/messages/batches",
+        "./llm-client",
+        "./logger"
+      ],
+      "keyAbstractions": [
+        "BatchOutput",
+        "BatchSubmitParams",
+        "PollOptions",
+        "custom_id encoding/decoding",
+        "disk-based crash-safety cache"
+      ],
+      "patterns": [
+        "pipeline"
+      ],
+      "notes": "The disk cache uses an atomic write pattern (write to .tmp then rename) to prevent partial/corrupt cache files. The `decodeCustomId` function is explicitly noted as non-invertible for truncated+hashed IDs — callers are expected to maintain a separate mapping in that case, which is a hidden coupling assumption. The `loadCachedResults` function uses `fs.existsSync` followed by `fs.readFileSync` rather than a single try/catch open, introducing a minor TOCTOU race. `simpleHash` uses a djb2-style hash but with a non-standard bit-truncation comment; the 32-bit coercion via `hash & hash` is a JavaScript idiom, not a bug, but is easy to misread.",
+      "tokensUsed": 4963
+    },
+    {
+      "path": "src/pipeline/static-analysis.ts",
+      "purpose": "Provides static analysis utilities for a pipeline stage that scans a project directory. It builds a normalized file tree (via `dree`), optionally constructs a dependency graph (via `dependency-cruiser` CLI), extracts analyzable file paths (excluding binaries), identifies leaf directories for bottom-up traversal, and persists/loads intermediate JSON artifacts to/from disk.",
+      "exports": [
+        "TreeNode",
+        "DependencyEdge",
+        "DependencyGraph",
+        "BuildOptions",
+        "saveArtifact",
+        "loadArtifact",
+        "buildFileTree",
+        "buildDependencyGraph",
+        "extractFilePaths",
+        "getLeafFolders"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "dree"
+      ],
+      "keyAbstractions": [
+        "TreeNode",
+        "DependencyGraph",
+        "BuildOptions",
+        "BINARY_EXTENSIONS",
+        "artifact persistence (saveArtifact/loadArtifact)"
+      ],
+      "patterns": [
+        "pipeline"
+      ],
+      "notes": "`buildDependencyGraph` uses a runtime `require('node:child_process')` and shells out to `npx depcruise`, making it an optional, best-effort step that silently returns `null` on failure. This dynamic require inside a try/catch means the dependency on `child_process` is invisible to static import analysis. `DependencyEdge` is exported but never used within the file — it appears to be a convenience re-export for downstream consumers. The atomic write pattern (write to `.tmp` then rename) in `saveArtifact` guards against partial writes but is not cross-platform safe on all Windows configurations.",
+      "tokensUsed": 3508
+    },
+    {
+      "path": "src/pipeline/progress.ts",
+      "purpose": "Defines the progress tracking subsystem for a multi-phase analysis pipeline. It declares the core state shape (ProgressState) and supporting types, provides a factory for fresh state, pure mutation functions for marking files as completed or failed, derived stats computation, and atomic JSON persistence (load/save) backed by the local filesystem.",
+      "exports": [
+        "PipelinePhase",
+        "CompletedItem",
+        "FailedItem",
+        "ProgressStats",
+        "ProgressState",
+        "computeStats",
+        "createFreshProgress",
+        "markCompleted",
+        "markFailed",
+        "saveProgress",
+        "loadProgress"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "keyAbstractions": [
+        "ProgressState",
+        "PipelinePhase",
+        "CompletedItem",
+        "FailedItem",
+        "ProgressStats"
+      ],
+      "patterns": [
+        "factory"
+      ],
+      "notes": "State mutations (markCompleted, markFailed) are implemented as pure functions returning new ProgressState objects (immutable update style) rather than mutating in place, which is architecturally notable for a Node.js pipeline module. Persistence uses an atomic write pattern (write to .tmp.json then rename) to guard against partial writes/corruption. Stats are intentionally always re-derived from the arrays at save time to guarantee consistency, meaning the stats field in a loaded ProgressState is potentially stale until the next save. Shape validation on load is intentionally lightweight (manual field presence checks) rather than schema-validated, with an explicit comment citing that full Zod validation is reserved for LLM output.",
+      "tokensUsed": 3207
+    }
+  ],
+  "modules": [
+    {
+      "path": "scripts",
+      "purpose": "Top-level scripts folder containing the CLI entry point for the ArchMapper reverse-engineering tool. It orchestrates a complete three-phase pipeline (static analysis → file analysis → module synthesis) that uses LLM clients to analyze codebases, manages progress checkpointing and artifact caching for resilience, and produces Markdown spec cards and cost/token-usage summaries. If this folder were deleted, the entire ArchMapper CLI tool would cease to function — no analysis pipelines could be initiated, no spec cards generated, and no cost reporting would be available.",
+      "children": [
+        "scripts/orchestrator.ts"
+      ],
+      "publicApi": [
+        "generateSpecCards",
+        "printCostSummary"
+      ],
+      "patterns": [
+        "flat-structure"
+      ],
+      "crossCuttingConcerns": [
+        "caching",
+        "logging",
+        "configuration"
+      ],
+      "notes": "Currently a single-file module acting as both CLI entry point and pipeline orchestrator. As the tool grows, the orchestrator could be split into separate concerns: CLI argument parsing, pipeline coordination, checkpoint/resume logic, and reporting/output generation.",
+      "tokensUsed": 1814
+    },
+    {
+      "path": "src/pipeline",
+      "purpose": "Implements the multi-phase architecture analysis pipeline that processes a codebase bottom-up. It performs static analysis (file tree construction, dependency graph extraction), per-file LLM-driven analysis with crash-recovery and checkpointing, bottom-up folder-wave synthesis (topological leaf-to-root module summarization), and persistent progress tracking across all phases. Without this module, no automated architecture extraction or LLM-based code analysis would function.",
+      "children": [
+        "src/pipeline/static-analysis.ts",
+        "src/pipeline/file-phase.ts",
+        "src/pipeline/folder-waves.ts",
+        "src/pipeline/progress.ts"
+      ],
+      "publicApi": [
+        "TreeNode",
+        "DependencyEdge",
+        "DependencyGraph",
+        "BuildOptions",
+        "saveArtifact",
+        "loadArtifact",
+        "buildFileTree",
+        "buildDependencyGraph",
+        "extractFilePaths",
+        "getLeafFolders",
+        "FilePhaseParams",
+        "FilePhaseResult",
+        "AggregatedUsage",
+        "runFilePhase",
+        "ProcessOneFileParams",
+        "processOneFile",
+        "buildFilePromptContext",
+        "Wave",
+        "ModuleSynthesisParams",
+        "ModuleSynthesisResult",
+        "ProcessOneModuleParams",
+        "computeWaves",
+        "gatherChildContext",
+        "runModuleSynthesis",
+        "processOneModule",
+        "PipelinePhase",
+        "CompletedItem",
+        "FailedItem",
+        "ProgressStats",
+        "ProgressState",
+        "computeStats",
+        "createFreshProgress",
+        "markCompleted",
+        "markFailed",
+        "saveProgress",
+        "loadProgress"
+      ],
+      "patterns": [
+        "layered-architecture",
+        "flat-structure"
+      ],
+      "crossCuttingConcerns": [
+        "error-handling",
+        "validation",
+        "caching"
+      ],
+      "notes": "The pipeline follows a clear phase ordering: static-analysis → file-phase → folder-waves, with progress.ts providing cross-phase checkpointing and crash-recovery. The file-phase supports both synchronous and Anthropic batch API modes. All phases share a mutable Architecture accumulator threaded through processing steps. The folder lacks a barrel index, so all child exports are directly consumed by the orchestration layer above.",
+      "tokensUsed": 2672
+    },
+    {
+      "path": "src/types",
+      "purpose": "Defines the canonical domain types and runtime validation schemas for the architectural analysis system. It serves as the single source of truth for data shapes (FileAnalysis, ModuleAnalysis, Architecture) used throughout the codebase, providing both Zod schemas for runtime validation and inferred TypeScript types for static type safety. If deleted, all modules depending on these shared type definitions and validation schemas would break.",
+      "children": [
+        "src/types/schema.ts"
+      ],
+      "publicApi": [
+        "FileAnalysisSchema",
+        "ModuleAnalysisSchema",
+        "ArchitectureSchema",
+        "FileAnalysis",
+        "ModuleAnalysis",
+        "Architecture"
+      ],
+      "patterns": [
+        "shared-library",
+        "flat-structure"
+      ],
+      "crossCuttingConcerns": [
+        "validation"
+      ],
+      "notes": "",
+      "tokensUsed": 1755
+    },
+    {
+      "path": "src",
+      "purpose": "Root source module for an automated architecture analysis system that processes codebases bottom-up using LLM-driven analysis. It provides configuration loading, structured logging, Anthropic API integration (single-request and batch), canonical domain types with runtime validation, and a multi-phase pipeline that builds file trees, analyzes individual files, and synthesizes folder-level module summaries. If deleted, the entire application ceases to function—no configuration, no LLM calls, no analysis pipeline, and no shared type definitions would exist.",
+      "children": [
+        "src/logger.ts",
+        "src/config.ts",
+        "src/config.loader.ts",
+        "src/llm-client.ts",
+        "src/batch-client.ts",
+        "src/pipeline",
+        "src/types"
+      ],
+      "publicApi": [
+        "config",
+        "loadConfig",
+        "validateProjectName",
+        "createRootLogger",
+        "Logger",
+        "LogLevel",
+        "LogEntry",
+        "createLlmClient",
+        "analyzeFile",
+        "synthesizeModule",
+        "buildBatchRequests",
+        "trackUsage",
+        "getJsonSchema",
+        "AnalysisKind",
+        "LlmResult",
+        "UsageInfo",
+        "BatchRequestItem",
+        "AnalyzeFileParams",
+        "SynthesizeModuleParams",
+        "submitBatch",
+        "pollBatch",
+        "retrieveAndSaveResults",
+        "deleteCachedResults",
+        "encodeCustomId",
+        "decodeCustomId",
+        "MAX_REQUESTS_PER_BATCH",
+        "BatchSubmitParams",
+        "BatchResult",
+        "BatchFailure",
+        "BatchOutput",
+        "PollOptions",
+        "FileAnalysisSchema",
+        "ModuleAnalysisSchema",
+        "ArchitectureSchema",
+        "FileAnalysis",
+        "ModuleAnalysis",
+        "Architecture",
+        "TreeNode",
+        "DependencyEdge",
+        "DependencyGraph",
+        "BuildOptions",
+        "saveArtifact",
+        "loadArtifact",
+        "buildFileTree",
+        "buildDependencyGraph",
+        "extractFilePaths",
+        "getLeafFolders",
+        "runFilePhase",
+        "processOneFile",
+        "buildFilePromptContext",
+        "computeWaves",
+        "gatherChildContext",
+        "runModuleSynthesis",
+        "processOneModule",
+        "PipelinePhase",
+        "ProgressState",
+        "computeStats",
+        "createFreshProgress",
+        "markCompleted",
+        "markFailed",
+        "saveProgress",
+        "loadProgress"
+      ],
+      "patterns": [
+        "layered-architecture",
+        "feature-module",
+        "shared-library"
+      ],
+      "crossCuttingConcerns": [
+        "logging",
+        "configuration",
+        "validation",
+        "error-handling",
+        "caching"
+      ],
+      "notes": "Configuration is split across config.ts (eager singleton with dotenv side-effect) and config.loader.ts (pure logic for testability). The LLM integration is split between llm-client.ts (single synchronous API calls) and batch-client.ts (batch lifecycle with polling and disk-based crash-safety caching), both targeting the Anthropic API but serving different execution strategies. The types submodule acts as a shared-library providing Zod-validated domain types consumed across all other modules.",
+      "tokensUsed": 3294
+    },
+    {
+      "path": ".",
+      "purpose": "Root of \"archmapper\", a Node.js CLI tool that performs fully automated, resumable, bottom-up reverse-engineering of codebases using LLM-driven analysis. The project orchestrates a three-phase pipeline (file tree building → individual file analysis → folder-level module synthesis) to produce architectural spec cards, cost summaries, and structured analysis artifacts. It relies on the Anthropic API for LLM integration, supports batch processing, and provides resilience through progress checkpointing and artifact caching. If this root were deleted, the entire archmapper tool—CLI entry point, analysis engine, configuration, logging, domain types, and pipeline orchestration—would be completely removed.",
+      "children": [
+        "package.json",
+        "tsconfig.json",
+        "vitest.config.ts",
+        "scripts",
+        "src"
+      ],
+      "publicApi": [
+        "generateSpecCards",
+        "printCostSummary",
+        "config",
+        "loadConfig",
+        "validateProjectName",
+        "createRootLogger",
+        "Logger",
+        "createLlmClient",
+        "analyzeFile",
+        "synthesizeModule",
+        "buildBatchRequests",
+        "trackUsage",
+        "submitBatch",
+        "pollBatch",
+        "retrieveAndSaveResults",
+        "deleteCachedResults",
+        "encodeCustomId",
+        "decodeCustomId",
+        "FileAnalysis",
+        "ModuleAnalysis",
+        "Architecture",
+        "TreeNode",
+        "DependencyEdge",
+        "DependencyGraph",
+        "FileAnalysisSchema",
+        "ModuleAnalysisSchema",
+        "ArchitectureSchema",
+        "buildFileTree",
+        "buildDependencyGraph",
+        "extractFilePaths",
+        "getLeafFolders",
+        "runFilePhase",
+        "runModuleSynthesis",
+        "computeWaves",
+        "gatherChildContext",
+        "PipelinePhase",
+        "ProgressState",
+        "computeStats",
+        "createFreshProgress",
+        "markCompleted",
+        "markFailed",
+        "saveProgress",
+        "loadProgress",
+        "saveArtifact",
+        "loadArtifact"
+      ],
+      "patterns": [
+        "layered-architecture",
+        "feature-module",
+        "barrel-reexport"
+      ],
+      "crossCuttingConcerns": [
+        "logging",
+        "configuration",
+        "validation",
+        "error-handling",
+        "caching"
+      ],
+      "notes": "The project is structured as a two-layer system: `src` provides the core library (config, LLM clients, domain types, pipeline phases, progress tracking) while `scripts` serves as the thin CLI orchestration layer that composes `src` modules into the end-to-end analysis pipeline. The ESM-only module system with Node >=20 requirement and ES2022 target reflects a modern runtime baseline. The maximally strict TypeScript configuration (noUncheckedIndexedAccess, exactOptionalPropertyTypes) suggests high emphasis on type safety for the LLM response parsing and schema validation paths.",
+      "tokensUsed": 2989
+    }
+  ],
+  "summary": "This project contains 14 analyzed files organized into 5 modules. Common design patterns include: validator, config-module, factory, singleton, barrel-export.",
+  "designPatterns": []
+}

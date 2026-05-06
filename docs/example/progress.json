@@ -1,0 +1,169 @@
+{
+  "projectName": "archmapper_self",
+  "scanRoot": "project/archmapper-self",
+  "phase": "done",
+  "startedAt": "2026-05-06T19:47:01.011Z",
+  "lastUpdatedAt": "2026-05-06T19:50:00.231Z",
+  "currentItem": null,
+  "completed": [
+    {
+      "path": "src/types/schema.ts",
+      "analyzedAt": "2026-05-06T19:49:13.838Z",
+      "tokensUsed": 2094,
+      "durationMs": 0
+    },
+    {
+      "path": "tsconfig.json",
+      "analyzedAt": "2026-05-06T19:49:13.839Z",
+      "tokensUsed": 1970,
+      "durationMs": 0
+    },
+    {
+      "path": "vitest.config.ts",
+      "analyzedAt": "2026-05-06T19:49:13.839Z",
+      "tokensUsed": 1658,
+      "durationMs": 0
+    },
+    {
+      "path": "src/logger.ts",
+      "analyzedAt": "2026-05-06T19:49:13.839Z",
+      "tokensUsed": 2415,
+      "durationMs": 0
+    },
+    {
+      "path": "src/config.ts",
+      "analyzedAt": "2026-05-06T19:49:13.839Z",
+      "tokensUsed": 1804,
+      "durationMs": 0
+    },
+    {
+      "path": "src/llm-client.ts",
+      "analyzedAt": "2026-05-06T19:49:13.839Z",
+      "tokensUsed": 5026,
+      "durationMs": 0
+    },
+    {
+      "path": "scripts/orchestrator.ts",
+      "analyzedAt": "2026-05-06T19:49:13.839Z",
+      "tokensUsed": 6152,
+      "durationMs": 0
+    },
+    {
+      "path": "src/pipeline/file-phase.ts",
+      "analyzedAt": "2026-05-06T19:49:13.840Z",
+      "tokensUsed": 6705,
+      "durationMs": 0
+    },
+    {
+      "path": "package.json",
+      "analyzedAt": "2026-05-06T19:49:13.840Z",
+      "tokensUsed": 2037,
+      "durationMs": 0
+    },
+    {
+      "path": "src/pipeline/folder-waves.ts",
+      "analyzedAt": "2026-05-06T19:49:13.840Z",
+      "tokensUsed": 5087,
+      "durationMs": 0
+    },
+    {
+      "path": "src/config.loader.ts",
+      "analyzedAt": "2026-05-06T19:49:13.840Z",
+      "tokensUsed": 2304,
+      "durationMs": 0
+    },
+    {
+      "path": "src/batch-client.ts",
+      "analyzedAt": "2026-05-06T19:49:13.840Z",
+      "tokensUsed": 4963,
+      "durationMs": 0
+    },
+    {
+      "path": "src/pipeline/static-analysis.ts",
+      "analyzedAt": "2026-05-06T19:49:13.840Z",
+      "tokensUsed": 3508,
+      "durationMs": 0
+    },
+    {
+      "path": "src/pipeline/progress.ts",
+      "analyzedAt": "2026-05-06T19:49:13.840Z",
+      "tokensUsed": 3207,
+      "durationMs": 0
+    },
+    {
+      "path": "scripts",
+      "analyzedAt": "2026-05-06T19:49:20.381Z",
+      "tokensUsed": 1814,
+      "durationMs": 6530
+    },
+    {
+      "path": "src/pipeline",
+      "analyzedAt": "2026-05-06T19:49:30.299Z",
+      "tokensUsed": 2672,
+      "durationMs": 9916
+    },
+    {
+      "path": "src/types",
+      "analyzedAt": "2026-05-06T19:49:35.721Z",
+      "tokensUsed": 1755,
+      "durationMs": 5420
+    },
+    {
+      "path": "src",
+      "analyzedAt": "2026-05-06T19:49:47.890Z",
+      "tokensUsed": 3294,
+      "durationMs": 12162
+    },
+    {
+      "path": ".",
+      "analyzedAt": "2026-05-06T19:50:00.223Z",
+      "tokensUsed": 2989,
+      "durationMs": 12314
+    }
+  ],
+  "failed": [
+    {
+      "path": "tests/integration",
+      "failedAt": "2026-05-06T19:49:35.723Z",
+      "error": "NoChildren: no analyzed children found for this folder",
+      "lastError": "NoChildren: no analyzed children found for this folder",
+      "attempts": 1
+    },
+    {
+      "path": "tests/unit/pipeline",
+      "failedAt": "2026-05-06T19:49:35.725Z",
+      "error": "NoChildren: no analyzed children found for this folder",
+      "lastError": "NoChildren: no analyzed children found for this folder",
+      "attempts": 1
+    },
+    {
+      "path": "tests/unit/types",
+      "failedAt": "2026-05-06T19:49:35.727Z",
+      "error": "NoChildren: no analyzed children found for this folder",
+      "lastError": "NoChildren: no analyzed children found for this folder",
+      "attempts": 1
+    },
+    {
+      "path": "tests/unit",
+      "failedAt": "2026-05-06T19:49:47.898Z",
+      "error": "NoChildren: no analyzed children found for this folder",
+      "lastError": "NoChildren: no analyzed children found for this folder",
+      "attempts": 1
+    },
+    {
+      "path": "tests",
+      "failedAt": "2026-05-06T19:49:47.905Z",
+      "error": "NoChildren: no analyzed children found for this folder",
+      "lastError": "NoChildren: no analyzed children found for this folder",
+      "attempts": 1
+    }
+  ],
+  "pending": [],
+  "stats": {
+    "totalFiles": 24,
+    "completedFiles": 19,
+    "failedFiles": 5,
+    "pendingFiles": 0
+  },
+  "batchIds": []
+}

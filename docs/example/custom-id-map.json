@@ -1,0 +1,16 @@
+{
+  "package_d_json": "package.json",
+  "scripts--orchestrator_d_ts": "scripts/orchestrator.ts",
+  "src--batch-client_d_ts": "src/batch-client.ts",
+  "src--config_d_loader_d_ts": "src/config.loader.ts",
+  "src--config_d_ts": "src/config.ts",
+  "src--llm-client_d_ts": "src/llm-client.ts",
+  "src--logger_d_ts": "src/logger.ts",
+  "src--pipeline--file-phase_d_ts": "src/pipeline/file-phase.ts",
+  "src--pipeline--folder-waves_d_ts": "src/pipeline/folder-waves.ts",
+  "src--pipeline--progress_d_ts": "src/pipeline/progress.ts",
+  "src--pipeline--static-analysis_d_ts": "src/pipeline/static-analysis.ts",
+  "src--types--schema_d_ts": "src/types/schema.ts",
+  "tsconfig_d_json": "tsconfig.json",
+  "vitest_d_config_d_ts": "vitest.config.ts"
+}
