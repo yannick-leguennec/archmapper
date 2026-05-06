@@ -1,5 +1,9 @@
 # ArchMapper
 
+[![CI](https://github.com/yannick-leguennec/archmapper/actions/workflows/ci.yml/badge.svg)](https://github.com/yannick-leguennec/archmapper/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D20-green.svg)](package.json)
+
 A fully automated, resumable, bottom-up reverse-engineering pipeline for any codebase. Drop source code in, get structured architectural documentation out.
 
 ## What it does
