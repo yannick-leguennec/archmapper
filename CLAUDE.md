@@ -45,7 +45,7 @@ archmapper/
 ├── .gitignore                    # project/, architecture/, .env, dist/
 ├── AGENTS.md                     # stub redirect for non-Claude agents
 ├── CLAUDE.md                     # this file
-├── LICENSE                       # proprietary — all rights reserved
+├── LICENSE                       # MIT
 ├── README.md                     # end-user quick start
 ├── package.json
 ├── tsconfig.json
@@ -278,7 +278,7 @@ A ticket is not done until every item below is satisfied:
 
 Owner: Yannick Le Guennec (The Wise Duck Dev)
 Repository: `archmapper`
-License: Proprietary — all rights reserved. See `LICENSE`.
+License: MIT. See `LICENSE`.
 
 ---
 

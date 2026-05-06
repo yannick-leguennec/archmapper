@@ -108,4 +108,4 @@ ArchMapper tracks token usage and cost for every run. At the end of a run, it pr
 
 ## License
 
-Proprietary — all rights reserved. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

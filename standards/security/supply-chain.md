@@ -35,7 +35,7 @@ Mitigation strategy: minimize the dependency surface, evaluate every addition ri
 | **Security track record** | Known CVEs, responsible disclosure process | Unresolved critical CVEs; no security contact |
 | **Ownership** | Who controls the npm package; does it match the GitHub repo owner? | Ownership transferred recently; anonymous maintainer |
 | **Dependency footprint** | Count of transitive dependencies | > 20 transitive deps for a simple utility |
-| **Licence** | Compatible with a proprietary CLI tool (see §5) | GPL, AGPL, or unknown licence |
+| **Licence** | Compatible with an MIT-licensed tool (see §5) | GPL, AGPL, or unknown licence |
 | **Source auditability** | Is the published package built from the public repo? | Build artifacts differ from source; minified-only publish |
 | **Version pinning** | Can we pin to a specific version? | Requires a floating range that allows auto-upgrades |
 | **Necessity** | Can stdlib or an existing dependency solve this? | If yes → reject; do not add a new dependency |
@@ -100,8 +100,8 @@ Every update — patch, minor, or major — must go through a defined process. "
 | ISC | **Allowed** | Functionally equivalent to MIT |
 | CC0-1.0 | **Allowed** | Public domain dedication |
 | Unlicense | **Allowed** | Public domain |
-| GPL-2.0 / GPL-3.0 | **Rejected** | Copyleft — incompatible with a proprietary tool |
-| AGPL-3.0 | **Rejected** | Network copyleft — especially dangerous for a tool that may be run as a service |
+| GPL-2.0 / GPL-3.0 | **Rejected** | Copyleft — viral; would force MIT consumers to comply with GPL terms |
+| AGPL-3.0 | **Rejected** | Network copyleft — even more restrictive; especially dangerous for a tool that may be run as a service |
 | Unknown / no licence | **Rejected** | No rights granted; legally unusable |
 
 ---
@@ -136,7 +136,7 @@ Every update — patch, minor, or major — must go through a defined process. "
 | Dependency without a `docs/DEPENDENCIES.md` entry | No audit trail |
 | Overwriting a previous `DEPENDENCIES.md` entry instead of appending | Destroys audit history |
 | Using a dependency for a problem that Node.js stdlib solves | Unnecessary supply chain exposure |
-| Licence not on the allowlist without a documented exception | Licence compatibility risk for a proprietary product |
+| Licence not on the allowlist without a documented exception | Licence compatibility risk for an MIT-licensed product |
 
 ---
 
