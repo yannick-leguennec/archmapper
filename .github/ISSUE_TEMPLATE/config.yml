@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Read the contribution guide
+    url: https://github.com/yannick-leguennec/archmapper/blob/main/CONTRIBUTING.md
+    about: Before opening an issue, please skim CONTRIBUTING.md for filing tips and the standards we use.
+  - name: Read the project standards
+    url: https://github.com/yannick-leguennec/archmapper/tree/main/standards
+    about: ArchMapper is a standards-driven project. The standards/ directory documents the conventions every contribution should follow.
