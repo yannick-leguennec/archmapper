@@ -14,8 +14,11 @@ project/
 test-project/
 
 # ─── Pipeline output artifacts ────────────────────────────────────────────────
-# architecture/ is committed — the output is ethical architectural documentation,
-# not reproduced source code. Keeping it in git provides backup and version history.
+# architecture/ holds the output artifacts (architecture.json, spec cards,
+# raw-tree.json, progress.json, custom-id-map.json). It is gitignored: each run
+# regenerates these files locally, and curated past analyses are kept in a
+# separate private repo (archmapper-analyses) rather than this codebase.
+architecture/
 
 # ─── Claude Code workspace ────────────────────────────────────────────────────
 .claude/
