@@ -68,14 +68,21 @@ export interface BatchRequestItem {
 
 // --- Pricing per 1M tokens ---
 
-// Pricing per 1M tokens, in USD. Update when Anthropic releases new models or
-// adjusts rates. Cache rates follow Anthropic's documented ratios:
+// Pricing per 1M tokens, in USD. Source: quorum-docs-mirror/anthropic/en/build-with-claude/prompt-caching.md
+// (canonical Anthropic rates). Cache rates follow Anthropic's documented ratios:
 //   cacheRead  = 0.10 * input rate (90% off)
 //   cacheWrite = 1.25 * input rate (5-minute ephemeral cache)
 // If a user points ArchMapper at a model not listed here, the cost summary
-// falls back to DEFAULT_PRICING (Sonnet rates) and the run still works.
+// falls back to DEFAULT_PRICING (Sonnet 5 introductory rates) and the run still works.
+//
+// Sonnet 5 introductory pricing applies through 2026-08-31; from 2026-09-01 it
+// rises to $3/$15 (same as Sonnet 4.6) — update this table before that date.
 const PRICING: Record<string, { input: number; output: number; cacheRead: number; cacheWrite: number }> = {
-  // Current models (latest as of 2026-05)
+  // Current defaults (2026-07)
+  'claude-opus-4-8':             { input: 5,    output: 25,   cacheRead: 0.5,   cacheWrite: 6.25 },
+  'claude-sonnet-5':             { input: 2,    output: 10,   cacheRead: 0.2,   cacheWrite: 2.5 },
+
+  // Still current / selectable
   'claude-opus-4-7':             { input: 5,    output: 25,   cacheRead: 0.5,   cacheWrite: 6.25 },
   'claude-sonnet-4-6':           { input: 3,    output: 15,   cacheRead: 0.3,   cacheWrite: 3.75 },
   'claude-haiku-4-5':            { input: 1,    output: 5,    cacheRead: 0.1,   cacheWrite: 1.25 },
@@ -92,7 +99,7 @@ const PRICING: Record<string, { input: number; output: number; cacheRead: number
   'claude-3-haiku-20240307':     { input: 0.25, output: 1.25, cacheRead: 0.025, cacheWrite: 0.3125 },
 }
 
-const DEFAULT_PRICING = { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 }
+const DEFAULT_PRICING = { input: 2, output: 10, cacheRead: 0.2, cacheWrite: 2.5 }
 
 // --- Client creation ---
 
@@ -144,9 +151,15 @@ function buildTool(kind: AnalysisKind): Anthropic.Messages.Tool {
 export async function analyzeFile(client: Anthropic, params: AnalyzeFileParams): Promise<LlmResult> {
   const tool = buildTool('file')
 
+  // Forced tool_choice is incompatible with extended/adaptive thinking
+  // (quorum-docs-mirror/.../extended-thinking.md). Sonnet 5 defaults adaptive
+  // thinking ON — must disable explicitly. Opus 4.8 thinking is off unless
+  // adaptive is set; we still pass disabled so the call stays valid if the
+  // operator enables adaptive later.
   const response = await client.messages.create({
     model: params.model,
     max_tokens: params.maxTokens,
+    thinking: { type: 'disabled' },
     system: [
       {
         type: 'text' as const,
@@ -176,6 +189,7 @@ export async function synthesizeModule(client: Anthropic, params: SynthesizeModu
   const response = await client.messages.create({
     model: params.model,
     max_tokens: params.maxTokens,
+    thinking: { type: 'disabled' },
     system: [
       {
         type: 'text' as const,
@@ -215,6 +229,7 @@ export function buildBatchRequests(
     params: {
       model,
       max_tokens: maxTokens,
+      thinking: { type: 'disabled' as const },
       system: [
         {
           type: 'text' as const,

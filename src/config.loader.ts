@@ -36,8 +36,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     projectName: validateProjectName(
       requireEnv('PROJECT_NAME', 'Alphanumeric name for this analysis run')
     ),
-    fileModel: optionalEnv('FILE_MODEL', 'claude-sonnet-4-6'),
-    synthesisModel: optionalEnv('SYNTHESIS_MODEL', 'claude-opus-4-7'),
+    fileModel: optionalEnv('FILE_MODEL', 'claude-sonnet-5'),
+    synthesisModel: optionalEnv('SYNTHESIS_MODEL', 'claude-opus-4-8'),
     scanRoot: optionalEnv('SCAN_ROOT', 'project'),
     useBatches: optionalEnv('USE_BATCHES', 'false') === 'true',
     excludePatterns: optionalEnv('EXCLUDE_PATTERNS', 'node_modules,dist,build,.git').split(','),

@@ -139,8 +139,8 @@ Quick summary:
 |---|---|---|---|
 | `ANTHROPIC_API_KEY` | **Yes** | — | Never log; never commit |
 | `PROJECT_NAME` | **Yes** | — | Letters, numbers, underscores (`^[A-Za-z0-9_]+$`) |
-| `FILE_MODEL` | No | `claude-sonnet-4-6` | Model for file-level analysis |
-| `SYNTHESIS_MODEL` | No | `claude-opus-4-7` | Model for folder synthesis + final architecture |
+| `FILE_MODEL` | No | `claude-sonnet-5` | Model for file-level analysis |
+| `SYNTHESIS_MODEL` | No | `claude-opus-4-8` | Model for folder synthesis + final architecture |
 | `SCAN_ROOT` | No | `project` | Path to analyze |
 | `USE_BATCHES` | No | `false` | Enable Message Batches |
 | `MAX_TOKENS` | No | `4096` | Per-response token ceiling |

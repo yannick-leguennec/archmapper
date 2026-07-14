@@ -163,6 +163,16 @@ describe('analyzeFile', () => {
     expect(args.tool_choice).toEqual({ type: 'tool', name: 'record_file_analysis' })
   })
 
+  it('disables thinking so forced tool_choice stays valid (Sonnet 5 default)', async () => {
+    const response = createMockResponse({ path: 'test' })
+    const client = createMockClient(response)
+
+    await analyzeFile(client, DEFAULT_FILE_PARAMS)
+
+    const args = vi.mocked(client.messages.create).mock.calls[0]![0] as { thinking?: { type: string } }
+    expect(args.thinking).toEqual({ type: 'disabled' })
+  })
+
   it('returns the tool input as json', async () => {
     const toolInput = { path: 'src/config.ts', purpose: 'Loads env vars', exports: ['config'], imports: [], keyAbstractions: [], patterns: ['config-module'] }
     const response = createMockResponse(toolInput)
@@ -305,6 +315,7 @@ describe('buildBatchRequests', () => {
     expect(requests).toHaveLength(2)
     expect(requests[0]!.custom_id).toBe('src/a.ts')
     expect(requests[1]!.custom_id).toBe('src/b.ts')
+    expect(requests[0]!.params.thinking).toEqual({ type: 'disabled' })
   })
 
   it('includes max_tokens in every request', () => {
@@ -410,8 +421,8 @@ describe('trackUsage', () => {
 
     const result = trackUsage('claude-unknown-model', usage)
 
-    // Default: $3 input + $15 output = $18
-    expect(result.costUsd).toBeCloseTo(18, 2)
+    // Default (Sonnet 5 intro): $2 input + $10 output = $12
+    expect(result.costUsd).toBeCloseTo(12, 2)
   })
 
   it('returns all token counts in the usage info', () => {

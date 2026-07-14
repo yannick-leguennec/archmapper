@@ -94,16 +94,16 @@ describe('loadConfig — required variables present', () => {
 })
 
 describe('loadConfig — optional variables with defaults', () => {
-  it('defaults fileModel to claude-sonnet-4-6', () => {
+  it('defaults fileModel to claude-sonnet-5', () => {
     const cfg = loadConfig(VALID_ENV)
 
-    expect(cfg.fileModel).toBe('claude-sonnet-4-6')
+    expect(cfg.fileModel).toBe('claude-sonnet-5')
   })
 
-  it('defaults synthesisModel to claude-opus-4-7', () => {
+  it('defaults synthesisModel to claude-opus-4-8', () => {
     const cfg = loadConfig(VALID_ENV)
 
-    expect(cfg.synthesisModel).toBe('claude-opus-4-7')
+    expect(cfg.synthesisModel).toBe('claude-opus-4-8')
   })
 
   it('defaults scanRoot to "project"', () => {
