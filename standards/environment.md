@@ -26,7 +26,7 @@
 | `ANTHROPIC_API_KEY` | **Yes** | — | Secret | Anthropic API key for LLM calls and Message Batches |
 | `PROJECT_NAME` | **Yes** | — | Config | Alphanumeric name for this analysis run; determines output directory |
 | `FILE_MODEL` | No | `claude-sonnet-5` | Config | Anthropic model for file-level analysis (high volume, factual extraction) |
-| `SYNTHESIS_MODEL` | No | `claude-opus-4-8` | Config | Anthropic model for folder synthesis and final architecture (deeper reasoning) |
+| `SYNTHESIS_MODEL` | No | `claude-opus-5` | Config | Anthropic model for folder synthesis and final architecture (deeper reasoning) |
 | `SCAN_ROOT` | No | `project` | Config | Path to the directory to analyze (relative to repo root) |
 | `USE_BATCHES` | No | `false` | Config | Set to `true` to use Anthropic Message Batches API instead of sync calls |
 | `EXCLUDE_PATTERNS` | No | `node_modules,dist,build,.git` | Config | Comma-separated list of directory/file patterns to exclude from the scan |
@@ -152,8 +152,8 @@ PROJECT_NAME=MyProject
 # FILE_MODEL=claude-sonnet-5
 
 # Anthropic model for folder synthesis and final architecture (lower volume, deeper reasoning).
-# Default: claude-opus-4-8
-# SYNTHESIS_MODEL=claude-opus-4-8
+# Default: claude-opus-5
+# SYNTHESIS_MODEL=claude-opus-5
 
 # Path to the directory to analyze (relative to repo root, or absolute).
 # Default: project

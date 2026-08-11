@@ -15,7 +15,7 @@ ArchMapper analyzes a codebase and produces:
 - **Architecture document** — a single `architecture.json` with the complete structural understanding
 - **Spec cards** — one Markdown file per module for human reading
 
-ArchMapper uses Claude Sonnet 5 for high-volume file analysis and Claude Opus 4.8 for deeper module synthesis. It never reproduces source code — only architectural documentation.
+ArchMapper uses Claude Sonnet 5 for high-volume file analysis and Claude Opus 5 for deeper module synthesis. It never reproduces source code — only architectural documentation.
 
 ## Quick start
 
@@ -108,7 +108,7 @@ For the schema and field-by-field semantics, see [`standards/analysis/reading-ar
 | `ANTHROPIC_API_KEY` | **Yes** | — | Your Anthropic API key |
 | `PROJECT_NAME` | **Yes** | — | Name for this run (letters, numbers, underscores) |
 | `FILE_MODEL` | No | `claude-sonnet-5` | Model for file analysis |
-| `SYNTHESIS_MODEL` | No | `claude-opus-4-8` | Model for folder synthesis |
+| `SYNTHESIS_MODEL` | No | `claude-opus-5` | Model for folder synthesis |
 | `SCAN_ROOT` | No | `project` | Directory to analyze |
 | `USE_BATCHES` | No | `false` | Use Message Batches API (50% cheaper) |
 | `EXCLUDE_PATTERNS` | No | `node_modules,dist,build,.git` | Patterns to exclude |

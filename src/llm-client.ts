@@ -59,6 +59,11 @@ export interface BatchRequestItem {
   params: {
     model: string
     max_tokens: number
+    // Declared because the batch path sends it: forced tool_choice is invalid
+    // with thinking on, and Sonnet 5 / Opus 5 default it on. Leaving it out of
+    // this type made the field invisible to callers and to the test that
+    // guards it.
+    thinking: { type: 'disabled' }
     system: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }>
     tools: Anthropic.Messages.Tool[]
     tool_choice: { type: 'tool'; name: string }
@@ -78,11 +83,12 @@ export interface BatchRequestItem {
 // Sonnet 5 introductory pricing applies through 2026-08-31; from 2026-09-01 it
 // rises to $3/$15 (same as Sonnet 4.6) — update this table before that date.
 const PRICING: Record<string, { input: number; output: number; cacheRead: number; cacheWrite: number }> = {
-  // Current defaults (2026-07)
-  'claude-opus-4-8':             { input: 5,    output: 25,   cacheRead: 0.5,   cacheWrite: 6.25 },
+  // Current defaults (2026-08)
+  'claude-opus-5':               { input: 5,    output: 25,   cacheRead: 0.5,   cacheWrite: 6.25 },
   'claude-sonnet-5':             { input: 2,    output: 10,   cacheRead: 0.2,   cacheWrite: 2.5 },
 
   // Still current / selectable
+  'claude-opus-4-8':             { input: 5,    output: 25,   cacheRead: 0.5,   cacheWrite: 6.25 },
   'claude-opus-4-7':             { input: 5,    output: 25,   cacheRead: 0.5,   cacheWrite: 6.25 },
   'claude-sonnet-4-6':           { input: 3,    output: 15,   cacheRead: 0.3,   cacheWrite: 3.75 },
   'claude-haiku-4-5':            { input: 1,    output: 5,    cacheRead: 0.1,   cacheWrite: 1.25 },
@@ -111,6 +117,35 @@ export function createLlmClient(apiKey: string): Anthropic {
 
 const schemaCache = new Map<AnalysisKind, Record<string, unknown>>()
 
+// Constraints strict tool use does not accept. zodToJsonSchema emits minLength
+// for z.string().min(1); leaving it in makes the API reject the tool definition.
+// Validation still happens our side — the Zod schema is unchanged.
+const UNSUPPORTED_STRICT_KEYWORDS = [
+  'minLength',
+  'maxLength',
+  'minimum',
+  'maximum',
+  'exclusiveMinimum',
+  'exclusiveMaximum',
+  'multipleOf',
+  'minItems',
+  'maxItems',
+  'pattern',
+  'format',
+] as const
+
+function stripUnsupportedKeywords(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(stripUnsupportedKeywords)
+  if (node === null || typeof node !== 'object') return node
+
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+    if ((UNSUPPORTED_STRICT_KEYWORDS as readonly string[]).includes(key)) continue
+    out[key] = stripUnsupportedKeywords(value)
+  }
+  return out
+}
+
 export function getJsonSchema(kind: AnalysisKind): Record<string, unknown> {
   const cached = schemaCache.get(kind)
   if (cached) return cached
@@ -119,8 +154,10 @@ export function getJsonSchema(kind: AnalysisKind): Record<string, unknown> {
   const jsonSchema = zodToJsonSchema(zodSchema)
 
   // Remove $schema and top-level metadata — Anthropic tool input_schema needs a clean object
-  const { $schema, ...clean } = jsonSchema as Record<string, unknown>
+  const { $schema, ...rest } = jsonSchema as Record<string, unknown>
   void $schema
+
+  const clean = stripUnsupportedKeywords(rest) as Record<string, unknown>
 
   schemaCache.set(kind, clean)
   return clean
@@ -136,9 +173,16 @@ function buildTool(kind: AnalysisKind): Anthropic.Messages.Tool {
 
   const schema = getJsonSchema(kind)
 
+  // strict: true makes the API guarantee tool input matches the schema, so an
+  // array field can never come back as a comma-separated string. Without it,
+  // ~60% of items failed Zod parsing on real runs (consilium 22/37,
+  // ai-consensus 119/195), overwhelmingly "Expected array, received string".
+  // Requires additionalProperties: false + required (both emitted by
+  // zodToJsonSchema) and no unsupported keywords (stripped above).
   return {
     name,
     description,
+    strict: true,
     input_schema: {
       type: 'object' as const,
       ...schema,
@@ -152,10 +196,12 @@ export async function analyzeFile(client: Anthropic, params: AnalyzeFileParams):
   const tool = buildTool('file')
 
   // Forced tool_choice is incompatible with extended/adaptive thinking
-  // (quorum-docs-mirror/.../extended-thinking.md). Sonnet 5 defaults adaptive
-  // thinking ON — must disable explicitly. Opus 4.8 thinking is off unless
-  // adaptive is set; we still pass disabled so the call stays valid if the
-  // operator enables adaptive later.
+  // (quorum-docs-mirror/.../extended-thinking.md). Sonnet 5 and Opus 5 both
+  // default adaptive thinking ON — must disable explicitly.
+  //
+  // Do not set output_config.effort above `high` on Opus 5: it accepts
+  // thinking:disabled only at effort `high` or below (400 at xhigh/max).
+  // We never set effort, so the API default of `high` applies and this is valid.
   const response = await client.messages.create({
     model: params.model,
     max_tokens: params.maxTokens,
@@ -248,7 +294,19 @@ export function buildBatchRequests(
 
 // --- Usage tracking + cost computation ---
 
-export function trackUsage(model: string, usage: Anthropic.Usage): UsageInfo {
+/**
+ * The token fields cost depends on. Deliberately narrower than
+ * `Anthropic.Usage`: the SDK's Usage type gains fields over time
+ * (cache_creation, inference_geo, service_tier, …) and none of them affect
+ * cost. Accepting only what we read keeps call sites and test fixtures stable
+ * across SDK upgrades. A full `Anthropic.Usage` still satisfies this.
+ */
+export type UsageTokens = Pick<
+  Anthropic.Usage,
+  'input_tokens' | 'output_tokens' | 'cache_read_input_tokens' | 'cache_creation_input_tokens'
+>
+
+export function trackUsage(model: string, usage: UsageTokens): UsageInfo {
   const pricing = PRICING[model] ?? DEFAULT_PRICING
 
   const inputTokens = usage.input_tokens

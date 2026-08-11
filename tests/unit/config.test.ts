@@ -100,10 +100,10 @@ describe('loadConfig — optional variables with defaults', () => {
     expect(cfg.fileModel).toBe('claude-sonnet-5')
   })
 
-  it('defaults synthesisModel to claude-opus-4-8', () => {
+  it('defaults synthesisModel to claude-opus-5', () => {
     const cfg = loadConfig(VALID_ENV)
 
-    expect(cfg.synthesisModel).toBe('claude-opus-4-8')
+    expect(cfg.synthesisModel).toBe('claude-opus-5')
   })
 
   it('defaults scanRoot to "project"', () => {
