@@ -9,7 +9,7 @@ import {
 } from '../../src/llm-client'
 
 import type Anthropic from '@anthropic-ai/sdk'
-import type { AnalyzeFileParams, SynthesizeModuleParams } from '../../src/llm-client'
+import type { AnalyzeFileParams, SynthesizeModuleParams, UsageTokens } from '../../src/llm-client'
 
 // --- Mock helpers ---
 
@@ -114,6 +114,44 @@ describe('getJsonSchema', () => {
 
     expect(schema1).toBe(schema2) // same reference
   })
+
+  // Strict tool use requires additionalProperties: false on every object.
+  // Without it the API cannot enforce the schema, and the model is free to
+  // return "a, b" where an array is declared — the ZodParseError that killed
+  // ~60% of items on both the consilium and ai-consensus runs.
+  it.each(['file', 'module'] as const)(
+    'sets additionalProperties false on the %s schema so strict tool use is valid',
+    (kind) => {
+      const schema = getJsonSchema(kind)
+
+      expect(schema['additionalProperties']).toBe(false)
+    }
+  )
+
+  // Strict tool use rejects string/numeric constraints. zodToJsonSchema emits
+  // minLength for z.string().min(1), so it must be stripped before the call.
+  it.each(['file', 'module'] as const)(
+    'strips constraints strict tool use does not support from the %s schema',
+    (kind) => {
+      const schema = getJsonSchema(kind)
+      const props = schema['properties'] as Record<string, Record<string, unknown>>
+
+      expect(props['path']!['minLength']).toBeUndefined()
+      expect(props['purpose']!['minLength']).toBeUndefined()
+    }
+  )
+
+  it.each(['file', 'module'] as const)(
+    'keeps required and array item types intact on the %s schema',
+    (kind) => {
+      const schema = getJsonSchema(kind)
+      const props = schema['properties'] as Record<string, Record<string, unknown>>
+
+      expect(schema['required']).toContain('path')
+      expect(props['patterns']!['type']).toBe('array')
+      expect(props['patterns']!['items']).toEqual({ type: 'string' })
+    }
+  )
 })
 
 // --- analyzeFile ---
@@ -161,6 +199,17 @@ describe('analyzeFile', () => {
 
     const args = vi.mocked(client.messages.create).mock.calls[0]![0]
     expect(args.tool_choice).toEqual({ type: 'tool', name: 'record_file_analysis' })
+  })
+
+  it('marks the tool strict so the API guarantees schema-valid input', async () => {
+    const response = createMockResponse({ path: 'test' })
+    const client = createMockClient(response)
+
+    await analyzeFile(client, DEFAULT_FILE_PARAMS)
+
+    const args = vi.mocked(client.messages.create).mock.calls[0]![0]
+    const tools = args.tools as Array<{ strict?: boolean }>
+    expect(tools[0]!.strict).toBe(true)
   })
 
   it('disables thinking so forced tool_choice stays valid (Sonnet 5 default)', async () => {
@@ -267,6 +316,17 @@ describe('synthesizeModule', () => {
     expect(args.model).toBe('claude-opus-4-6')
   })
 
+  it('marks the module tool strict so the API guarantees schema-valid input', async () => {
+    const response = createMockResponse({ path: 'src', purpose: 'p', children: [], publicApi: [], patterns: [], crossCuttingConcerns: [] })
+    const client = createMockClient(response)
+
+    await synthesizeModule(client, DEFAULT_MODULE_PARAMS)
+
+    const args = vi.mocked(client.messages.create).mock.calls[0]![0]
+    const tools = args.tools as Array<{ strict?: boolean }>
+    expect(tools[0]!.strict).toBe(true)
+  })
+
   it('uses tool_choice for module structured output', async () => {
     const response = createMockResponse({ path: 'test' })
     const client = createMockClient(response)
@@ -348,7 +408,7 @@ describe('buildBatchRequests', () => {
 
 describe('trackUsage', () => {
   it('computes cost correctly for Sonnet (no cache)', () => {
-    const usage: Anthropic.Usage = {
+    const usage: UsageTokens = {
       input_tokens: 1_000_000,
       output_tokens: 1_000_000,
       cache_read_input_tokens: 0,
@@ -362,7 +422,7 @@ describe('trackUsage', () => {
   })
 
   it('computes cost correctly for Opus (no cache)', () => {
-    const usage: Anthropic.Usage = {
+    const usage: UsageTokens = {
       input_tokens: 1_000_000,
       output_tokens: 1_000_000,
       cache_read_input_tokens: 0,
@@ -376,7 +436,7 @@ describe('trackUsage', () => {
   })
 
   it('applies cache read discount (90% cheaper)', () => {
-    const usage: Anthropic.Usage = {
+    const usage: UsageTokens = {
       input_tokens: 10_000,   // total input including cache reads
       output_tokens: 5_000,
       cache_read_input_tokens: 8_000,   // 8k of the 10k were cached
@@ -394,7 +454,7 @@ describe('trackUsage', () => {
   })
 
   it('applies cache creation surcharge (25% more expensive)', () => {
-    const usage: Anthropic.Usage = {
+    const usage: UsageTokens = {
       input_tokens: 10_000,
       output_tokens: 5_000,
       cache_read_input_tokens: 0,
@@ -412,7 +472,7 @@ describe('trackUsage', () => {
   })
 
   it('falls back to default pricing for unknown models', () => {
-    const usage: Anthropic.Usage = {
+    const usage: UsageTokens = {
       input_tokens: 1_000_000,
       output_tokens: 1_000_000,
       cache_read_input_tokens: 0,
@@ -426,7 +486,7 @@ describe('trackUsage', () => {
   })
 
   it('returns all token counts in the usage info', () => {
-    const usage: Anthropic.Usage = {
+    const usage: UsageTokens = {
       input_tokens: 2000,
       output_tokens: 800,
       cache_read_input_tokens: 1500,
